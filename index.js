@@ -42,13 +42,41 @@ app.get('/cadastro', (req, res) => {
     res.render('cadastro', {});
 })
 
+app.get('/login', (req, res) => {
+    res.render('login', {});
+})
+
+var id = 1
 app.post('/cadastro', (req, res) => {
     let nome = req.body.nome;
     let email = req.body.email;
     let senha = req.body.senha;
-    bcrypt.hash(senha, 10, (err, hash) => {
-        db.query('INSERT INTO `usuarios`(`senha`) VALUES (?)', [hash], (err, result) => {})
+    let sql = 'INSERT INTO usuarios (id, nome, email) VALUES (?,?,?)';
+    db.query(sql,[id, nome, email], (err, result) => {})
+         bcrypt.hash(senha, 10, (err, hash) => {
+             let sql = 'UPDATE usuarios SET senha = ? WHERE id = ?';
+             db.query(sql, [hash, id], (err, result) => {})
+             id++;
+     })
+})
+
+app.post('/login', (req, res) => {
+    let email = req.body.email;
+    let senha = req.body.senha;
+    let sql = 'SELECT * FROM `usuarios` WHERE `email` = ?';
+    db.query(sql, [email], (err, result) => {
+        if(result.length > 0) {
+            bcrypt.compare(senha, result[0].senha, (err, result) => {
+                if(result) {
+                    res.redirect('/');
+                } else {
+                    res.redirect('/login');
+                    console.log('Senha incorreta');
+                }
+            })
+        } else {
+            res.redirect('/login');
+            console.log('Usuário não encontrado');
+        }
     })
-    let sql = 'INSERT INTO `usuarios`(`nome`, `email`) VALUES (?,?)'
-    db.query(sql,[nome, email], (err, result) => {})
 })
