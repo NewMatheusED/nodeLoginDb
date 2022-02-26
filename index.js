@@ -32,10 +32,7 @@ db.connect((err) => {
 })
 
 app.get('/', (req, res) => {
-    let sql = 'SELECT * FROM `usuarios` ';
-    let query = db.query(sql, (err, results) => {
-        res.render('index', {user: results})
-    })
+        res.render('index', {nome: null, email: null})
 })
 
 app.get('/cadastro', (req, res) => {
@@ -57,7 +54,8 @@ app.post('/cadastro', (req, res) => {
              let sql = 'UPDATE usuarios SET senha = ? WHERE id = ?';
              db.query(sql, [hash, id], (err, result) => {})
              id++;
-     })
+            })
+    res.render('index', {nome: nome, email: email});
 })
 
 app.post('/login', (req, res) => {
@@ -65,17 +63,18 @@ app.post('/login', (req, res) => {
     let senha = req.body.senha;
     let sql = 'SELECT * FROM `usuarios` WHERE `email` = ?';
     db.query(sql, [email], (err, result) => {
+        let nome = result[0].nome;
         if(result.length > 0) {
             bcrypt.compare(senha, result[0].senha, (err, result) => {
                 if(result) {
-                    res.redirect('/');
+                    res.render('index', {nome: nome, email: email});
                 } else {
-                    res.redirect('/login');
+                    res.redirect('login');
                     console.log('Senha incorreta');
                 }
             })
         } else {
-            res.redirect('/login');
+            res.redirect('login');
             console.log('Usuário não encontrado');
         }
     })
